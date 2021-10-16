@@ -1,0 +1,85 @@
+<div class="columns">
+  <aside class="column sidebar is-narrow">
+    <section class="section">
+      <nav class="panel">
+        <p class="panel-heading">
+          Symbols
+        </p>
+        <div class="panel-block">
+            <p class="control has-icons-left">
+              <input class="input" type="text" placeholder="Search">
+              <span class="icon is-left">
+                <i class="fas fa-search" aria-hidden="true"></i>
+              </span>
+            </p>
+        </div>
+        <p class="panel-tabs">
+          <a class="is-active">All</a>
+          <a>Best</a>
+        </p>
+        ${StockList}
+        <template id="StockListItem">
+          <a onclick="${LoadStock}" class="panel-block">
+            <span class="panel-icon">
+              <i class="fas fa-book" aria-hidden="true"></i>
+            </span>
+            ${Symbol} - ${Name}
+          </a>
+        </template>
+      </nav>
+    </section>
+  </aside>
+  <div class="column">
+    <section class="section">
+      ${Body}
+
+      <div id="notification-area">
+        <div>${Error}</div>
+      </div>
+
+      <template id="Home">
+        <div class="content">
+          ${StockInfo}
+          <template id="SelectedStock">
+            <h1>${Symbol}: ${Name}</h1>
+            <h3>Last price: ${Price} ${Currency}</h3>
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Strike</th>
+                  <th>Call Bid</th>
+                  <th>Call Ask</th>
+                  <th>Put Bid</th>
+                  <th>Put Ask</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${Rows}
+                <template id="OptionRow">
+                  <tr>
+                    <th> ${Strike} </th>
+                    <td class="${CallRowClass}"> ${CallBid} </td>
+                    <td class="${CallRowClass}"> ${CallAsk} </td>
+                    <td class="${PutRowClass}"> ${PutBid} </td>
+                    <td class="${PutRowClass}"> ${PutAsk} </td>
+                  </tr>
+                </template>
+              </tbody>
+            </table>
+          </template>
+          <template id="NoStockSelected">
+            <h1>LOOK AWAY</h1>
+          </template>
+        </div>
+      </template>
+      
+      <template id="ErrorNotification">
+        <div class="notification is-warning">
+          <button class="delete ${HideClass}" onclick="${Hide}"></button>
+          ${Text}
+        </div>
+      </template>
+
+    </section>
+  </div>
+</div>
