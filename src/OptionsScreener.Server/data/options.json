@@ -101,7 +101,6 @@
                 "lastPrice": 48.56,
                 "change": 0.01,
                 "percentChange": 0.01,
-                "volume": 3,
                 "openInterest": 0,
                 "bid": 47.75,
                 "ask": 51.15,
@@ -124,7 +123,6 @@
                 "contractSize": "REGULAR",
                 "expiration": 1637280000,
                 "lastTradeDate": 1634060939,
-                "impliedVolatility": 0.7939473730468749,
                 "inTheMoney": false
               }
             ],
@@ -136,7 +134,6 @@
                 "lastPrice": 0.04,
                 "change": 0.01,
                 "percentChange": 0.01,
-                "volume": 5,
                 "openInterest": 16,
                 "bid": 0.01,
                 "ask": 0.56,
@@ -159,7 +156,6 @@
                 "contractSize": "REGULAR",
                 "expiration": 1637280000,
                 "lastTradeDate": 1630427612,
-                "impliedVolatility": 1.0234423828125,
                 "inTheMoney": false
               }
             ]

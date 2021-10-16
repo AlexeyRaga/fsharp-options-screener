@@ -11,6 +11,8 @@ type Option =
     { ask: decimal
       bid: decimal
       strike: decimal
+      volume: int
+      volatility: decimal
       inTheMoney: bool }
 
 type StrikeLine =

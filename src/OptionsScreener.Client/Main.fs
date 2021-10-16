@@ -21,6 +21,7 @@ type Model =
         nextExpire: DateTime
         page: Page
         stockList: Stock[]
+        nearMarket: bool
         selectedStock: StockInfo option
         error: string option
     }
@@ -40,6 +41,7 @@ type Message =
     | GotStockList of Stock[]
     | LoadStock of DateTime * Symbol
     | GotStockInfo of StockInfo
+    | EnableNearMarket of bool
     | Error of exn
     | ClearError
     
@@ -67,6 +69,9 @@ let update remote message model =
     | GotStockInfo value ->
         { model with selectedStock = Some value }, Cmd.none
         
+    | EnableNearMarket value ->
+        { model with nearMarket = value }, Cmd.none
+        
     | Error exn ->
         { model with error = Some exn.Message }, Cmd.none
     | ClearError ->
@@ -85,16 +90,32 @@ let rec findNthDay (day: DayOfWeek) (occurence: int) (date: DateTime) =
     
 /// Next expiration date is 3rd Friday of each month 
 let nextExpirationDate (date: DateTime) = findNthDay DayOfWeek.Friday 3 date
-
+    
+module Option =
+    let inline maybe z f = Option.fold (fun _ -> f) z 
         
 let stockRow' row =
     let optionCssClass v = v |> Option.filter (fun x -> x.inTheMoney) |> Option.map (fun _ -> "is-selected") |> Option.defaultValue ""
-    Main.OptionRow()
+    
+    let inline withOpt o f state  = Option.fold f state o
+
+    let template =
+        Main.OptionRow()
+            |> withOpt row.call (fun html x ->
+                html.CallAsk(x.ask |> formatMoney)
+                    .CallBid(x.bid |> formatMoney)
+                    .CallVolume(string x.volume)
+                    .CallVolatility(string x.volatility)
+                )
+            |> withOpt row.put (fun html x ->
+                html.PutAsk(x.ask |> formatMoney)
+                    .PutBid(x.bid |> formatMoney)
+                    .PutVolume(string x.volume)
+                    .PutVolatility(string x.volatility)
+                )
+    
+    template
         .Strike(formatMoney row.strike)
-        .CallAsk(row.call |> Option.map (fun x -> x.ask) |> formatMoney')
-        .CallBid(row.call |> Option.map (fun x -> x.bid) |> formatMoney')
-        .PutAsk(row.put |> Option.map (fun x -> x.ask) |> formatMoney')
-        .PutBid(row.put |> Option.map (fun x -> x.bid) |> formatMoney')
         .CallRowClass(optionCssClass row.call)
         .PutRowClass(optionCssClass row.put)
         .Elt()
@@ -105,9 +126,16 @@ let homePage model dispatch =
         .StockInfo(cond model.selectedStock <| function
                    | None -> Main.NoStockSelected().Elt()
                    | Some stock ->
-                       let p = stock.strikes |> Array.map stockRow' |> Array.toList |> concat
+                       let lines =
+                            if model.nearMarket then 
+                                let marketLineIndex = stock.strikes |> Array.findIndex (fun x -> x.strike > stock.marketPrice)
+                                stock.strikes.[marketLineIndex-5 .. marketLineIndex+5]
+                            else stock.strikes
+                                
+                       let p = lines |> Array.map stockRow' |> Array.toList |> concat
                        Main.SelectedStock()
                            .Symbol(stock.symbol.Value)
+                           .NearMarket(model.nearMarket, fun x -> dispatch (EnableNearMarket x) )
                            .Name(stock.symbol.Value)
                            .Price($"%.2f{stock.marketPrice}")
                            .Currency(stock.currency)
@@ -145,6 +173,7 @@ let initModel date =
     {
         nextExpire = nextExpirationDate date
         page = Home
+        nearMarket = true
         stockList = Array.empty
         selectedStock = None
         error = None

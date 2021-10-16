@@ -40,13 +40,13 @@ type StockService(ctx: IRemoteContext, env: IWebHostEnvironment) =
                     let calls =
                         res.Options
                         |> Array.collect (fun x -> x.Calls)
-                        |> Seq.map (fun x -> (x.Strike, { ask = x.Ask; bid = (x.Bid |> Option.defaultValue 0M); strike = x.Strike; inTheMoney = x.InTheMoney }))
+                        |> Seq.map (fun x -> (x.Strike, { ask = x.Ask; bid = (x.Bid |> Option.defaultValue 0M); strike = x.Strike; inTheMoney = x.InTheMoney; volume = x.Volume |> Option.defaultValue 0; volatility = x.ImpliedVolatility |> Option.defaultValue 0M }))
                         |> Map.ofSeq
                         
                     let puts =
                         res.Options
                         |> Seq.collect (fun x -> x.Puts)
-                        |> Seq.map (fun x -> (x.Strike, { ask = x.Ask; bid = (x.Bid |> Option.defaultValue 0M); strike = x.Strike; inTheMoney = x.InTheMoney }))
+                        |> Seq.map (fun x -> (x.Strike, { ask = x.Ask; bid = (x.Bid |> Option.defaultValue 0M); strike = x.Strike; inTheMoney = x.InTheMoney; volume = x.Volume |> Option.defaultValue 0; volatility = x.ImpliedVolatility |> Option.defaultValue 0M }))
                         |> Map.ofSeq
                         
                     let lines =

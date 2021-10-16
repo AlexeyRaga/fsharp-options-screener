@@ -41,31 +41,53 @@
         <div class="content">
           ${StockInfo}
           <template id="SelectedStock">
-            <h1>${Symbol}: ${Name}</h1>
-            <h3>Last price: ${Price} ${Currency}</h3>
-            <table class="table">
-              <thead>
-                <tr>
-                  <th>Strike</th>
-                  <th>Call Bid</th>
-                  <th>Call Ask</th>
-                  <th>Put Bid</th>
-                  <th>Put Ask</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${Rows}
-                <template id="OptionRow">
-                  <tr>
-                    <th> ${Strike} </th>
-                    <td class="${CallRowClass}"> ${CallBid} </td>
-                    <td class="${CallRowClass}"> ${CallAsk} </td>
-                    <td class="${PutRowClass}"> ${PutBid} </td>
-                    <td class="${PutRowClass}"> ${PutAsk} </td>
-                  </tr>
-                </template>
-              </tbody>
-            </table>
+            <nav class="panel">
+              <div class="panel-heading">
+                ${Symbol}: ${Name}
+              </div>
+              <div class="panel-block">
+                Last price: ${Price} ${Currency}
+              </div>
+              <div class="panel-block">
+                <label class="panel-block">
+                  <input bind="${NearMarket}" type="checkbox">
+                  Near marker
+                </label>
+              </div>
+              <div class="panel-block">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>Call Volatility</th>
+                      <th>Call Volume</th>
+                      <th>Call Bid</th>
+                      <th>Call Ask</th>
+                      <th>Strike</th>
+                      <th>Put Bid</th>
+                      <th>Put Ask</th>
+                      <th>Put Volume</th>
+                      <th>Put Volatility</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${Rows}
+                    <template id="OptionRow">
+                      <tr>
+                        <td class="${CallRowClass}"> ${CallVolatility} </td>
+                        <td class="${CallRowClass}"> ${CallVolume} </td>
+                        <td class="${CallRowClass}"> ${CallBid} </td>
+                        <td class="${CallRowClass}"> ${CallAsk} </td>
+                        <th> ${Strike} </th>
+                        <td class="${PutRowClass}"> ${PutBid} </td>
+                        <td class="${PutRowClass}"> ${PutAsk} </td>
+                        <td class="${PutRowClass}"> ${PutVolume} </td>
+                        <td class="${PutRowClass}"> ${PutVolatility} </td>
+                      </tr>
+                    </template>
+                  </tbody>
+                </table>
+              </div>
+            </nav>
           </template>
           <template id="NoStockSelected">
             <h1>LOOK AWAY</h1>
