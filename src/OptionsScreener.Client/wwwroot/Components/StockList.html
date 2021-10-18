@@ -1,0 +1,26 @@
+<nav class="panel">
+    <p class="panel-heading">
+        Symbols
+    </p>
+    <div class="panel-block">
+        <p class="control has-icons-left">
+            <input bind="${SearchTerm}" class="input" type="text" placeholder="Search">
+            <span class="icon is-left">
+                <i class="fas fa-search" aria-hidden="true"></i>
+            </span>
+        </p>
+    </div>
+    <p class="panel-tabs">
+        <a class="is-active">All</a>
+        <a>Best</a>
+    </p>
+    ${StockList}
+    <template id="StockListItem">
+        <a onclick="${LoadStock}" class="panel-block">
+            <span class="panel-icon">
+              <i class="fas fa-book" aria-hidden="true"></i>
+            </span>
+            ${Symbol} - ${Name}
+        </a>
+    </template>
+</nav>

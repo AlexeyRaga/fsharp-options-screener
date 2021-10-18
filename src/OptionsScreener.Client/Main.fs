@@ -7,10 +7,8 @@ open Bolero.Html
 open Bolero.Remoting
 open Bolero.Remoting.Client
 open Bolero.Templating.Client
+open OptionsScreener.Client.Components
 open OptionsScreener.Client.ViewModel
-
-open FSharp.Data
-
 
 /// Routing endpoints definition.
 type Page =
@@ -20,26 +18,17 @@ type Model =
     {
         nextExpire: DateTime
         page: Page
-        stockList: Stock[]
+        stockList: StockList.Model
         nearMarket: bool
         selectedStock: StockInfo option
         error: string option
     }
-    
-type StockService =
-    { getStocks: unit -> Async<Stock[]>
-      getStockInfo: DateTime * Symbol -> Async<StockInfo>
-    }
-    interface IRemoteService with
-        member this.BasePath = "/stock"
-
 
 /// The Elmish application's update messages.
 type Message =
     | SetPage of Page
-    | LoadStockList
-    | GotStockList of Stock[]
-    | LoadStock of DateTime * Symbol
+    | StockListMessage of StockList.Message
+    | LoadStock of Symbol
     | GotStockInfo of StockInfo
     | EnableNearMarket of bool
     | Error of exn
@@ -54,16 +43,16 @@ let update remote message model =
     match message with
     | SetPage page ->
         { model with page = page }, Cmd.none
-
-    | LoadStockList ->
-        let cmd = Cmd.OfAsync.either remote.getStocks () GotStockList Error
-        model, cmd
         
-    | GotStockList value ->
-        { model with stockList = value }, Cmd.none
+    | StockListMessage (StockList.Message.ItemSelected stock) ->
+        model, Cmd.ofMsg (LoadStock stock.symbol)
         
-    | LoadStock (expDate, stock) ->
-        let cmd = Cmd.OfAsync.either remote.getStockInfo (expDate, stock) GotStockInfo Error 
+    | StockListMessage msg ->
+        let listModel, listCmd = StockList.update remote msg model.stockList
+        { model with stockList = listModel }, Cmd.map StockListMessage listCmd
+        
+    | LoadStock stock ->
+        let cmd = Cmd.OfAsync.either remote.getStockInfo (model.nextExpire, stock) GotStockInfo Error 
         model, cmd 
         
     | GotStockInfo value ->
@@ -102,14 +91,14 @@ let stockRow' row =
     let template =
         Main.OptionRow()
             |> withOpt row.call (fun html x ->
-                html.CallAsk(x.ask |> formatMoney)
-                    .CallBid(x.bid |> formatMoney)
+                html.CallAsk(x.ask |> formatMoney')
+                    .CallBid(x.bid |> formatMoney')
                     .CallVolume(string x.volume)
                     .CallVolatility(string x.volatility)
                 )
             |> withOpt row.put (fun html x ->
-                html.PutAsk(x.ask |> formatMoney)
-                    .PutBid(x.bid |> formatMoney)
+                html.PutAsk(x.ask |> formatMoney')
+                    .PutBid(x.bid |> formatMoney')
                     .PutVolume(string x.volume)
                     .PutVolatility(string x.volatility)
                 )
@@ -144,16 +133,9 @@ let homePage model dispatch =
                    )
         .Elt()
      
-let stockListItem (model: Model) dispatch (stock: Stock) =
-    Main.StockListItem()
-        .LoadStock(fun _ -> dispatch (LoadStock (model.nextExpire, stock.symbol)))
-        .Symbol(stock.symbol.Value)
-        .Name(stock.name)
-        .Elt()
-        
 let view model dispatch =
     Main()
-        .StockList(model.stockList |> Array.map (stockListItem model dispatch) |> Array.toList |> concat)
+        .StockList(StockList.view model.stockList (StockListMessage >> dispatch))
         .Body(
             cond model.page <| function
             | Home -> homePage model dispatch
@@ -170,23 +152,24 @@ let view model dispatch =
         .Elt()
 
 let initModel date =
+    let stockListModel, stockListCmd = StockList.init()
     {
         nextExpire = nextExpirationDate date
         page = Home
         nearMarket = true
-        stockList = Array.empty
+        stockList = stockListModel
         selectedStock = None
         error = None
-    }
+    }, Cmd.map StockListMessage stockListCmd
 
 type MyApp() =
     inherit ProgramComponent<Model, Message>()
 
     override this.Program =
-        let model = initModel DateTime.UtcNow
+        let model, cmd = initModel DateTime.UtcNow
         let stockService = this.Remote<StockService>()
         let update = update stockService
-        Program.mkProgram (fun _ -> model, Cmd.ofMsg LoadStockList) update view
+        Program.mkProgram (fun _ -> model, cmd) update view
         |> Program.withRouter router
 #if DEBUG
         |> Program.withHotReload

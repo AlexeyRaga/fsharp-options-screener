@@ -8,8 +8,8 @@ type Symbol =
 type Stock = { symbol: Symbol; name: string }
 
 type Option =
-    { ask: decimal
-      bid: decimal
+    { ask: decimal option
+      bid: decimal option
       strike: decimal
       volume: int
       volatility: decimal

@@ -15,17 +15,18 @@ type optionsApi = JsonProvider<"data/options.json", ResolutionFolder=__SOURCE_DI
 
 
 type StockService(ctx: IRemoteContext, env: IWebHostEnvironment) =
-    inherit RemoteHandler<Client.Main.StockService>()
+    inherit RemoteHandler<Client.StockService>()
     
     override this.Handler = {
         getStocks =
             fun () ->
                 async {
                     let! value = sp500Page.AsyncLoad(sp500ListPage)
-                    return
+                    let arr =
                         value.Tables.``S&P 500 component stocksEdit``.Rows
                         |> Seq.map (fun x -> { symbol = Symbol x.Symbol; name = x.Security})
                         |> Seq.toArray
+                    return arr
                 }
                 
         getStockInfo =
@@ -36,17 +37,16 @@ type StockService(ctx: IRemoteContext, env: IWebHostEnvironment) =
                     let! data = optionsApi.AsyncLoad(url)
                     let res = data.OptionChain.Result |> Array.head
                     
-                    let strikes = res.Strikes
                     let calls =
                         res.Options
                         |> Array.collect (fun x -> x.Calls)
-                        |> Seq.map (fun x -> (x.Strike, { ask = x.Ask; bid = (x.Bid |> Option.defaultValue 0M); strike = x.Strike; inTheMoney = x.InTheMoney; volume = x.Volume |> Option.defaultValue 0; volatility = x.ImpliedVolatility |> Option.defaultValue 0M }))
+                        |> Seq.map (fun x -> (x.Strike, { ask = x.Ask; bid = x.Bid; strike = x.Strike; inTheMoney = x.InTheMoney; volume = x.Volume |> Option.defaultValue 0; volatility = x.ImpliedVolatility |> Option.defaultValue 0M }))
                         |> Map.ofSeq
                         
                     let puts =
                         res.Options
                         |> Seq.collect (fun x -> x.Puts)
-                        |> Seq.map (fun x -> (x.Strike, { ask = x.Ask; bid = (x.Bid |> Option.defaultValue 0M); strike = x.Strike; inTheMoney = x.InTheMoney; volume = x.Volume |> Option.defaultValue 0; volatility = x.ImpliedVolatility |> Option.defaultValue 0M }))
+                        |> Seq.map (fun x -> (x.Strike, { ask = x.Ask; bid = x.Bid; strike = x.Strike; inTheMoney = x.InTheMoney; volume = x.Volume |> Option.defaultValue 0; volatility = x.ImpliedVolatility |> Option.defaultValue 0M }))
                         |> Map.ofSeq
                         
                     let lines =
